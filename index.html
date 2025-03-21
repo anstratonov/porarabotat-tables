@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Занятость рабочих мест</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+    }
+    .place {
+      padding: 1rem;
+      margin: 1rem 0;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .free {
+      background-color: #e0ffe0;
+    }
+    .occupied {
+      background-color: #ffe0e0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Занятость рабочих мест</h1>
+  <div id="places"></div>
+
+  <script>
+    const places = ['Стол 1', 'Стол 2', 'Стол 3', 'Стол 4', 'Стол 5'];
+    const state = JSON.parse(localStorage.getItem('placesState')) || {};
+
+    const render = () => {
+      const container = document.getElementById('places');
+      container.innerHTML = '';
+      places.forEach((place) => {
+        const div = document.createElement('div');
+        const isOccupied = state[place];
+        div.className = `place ${isOccupied ? 'occupied' : 'free'}`;
+        div.textContent = `${place} — ${isOccupied ? 'ЗАНЯТО' : 'СВОБОДНО'}`;
+        div.onclick = () => {
+          state[place] = !state[place];
+          localStorage.setItem('placesState', JSON.stringify(state));
+          render();
+        };
+        container.appendChild(div);
+      });
+    };
+
+    render();
+  </script>
+</body>
+</html>
+
