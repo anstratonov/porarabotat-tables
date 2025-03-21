@@ -8,14 +8,32 @@
     body {
       font-family: sans-serif;
       padding: 2rem;
+      max-width: 900px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .section-title {
+      margin-top: 2rem;
+      font-size: 1.2rem;
+      font-weight: bold;
     }
     .place {
       padding: 1rem;
-      margin: 1rem 0;
       border: 2px solid #ccc;
       border-radius: 10px;
       cursor: pointer;
       transition: background 0.3s;
+      text-align: center;
+      font-size: 1.1rem;
+      white-space: pre-line;
     }
     .free {
       background-color: #e0ffe0;
@@ -23,30 +41,80 @@
     .occupied {
       background-color: #ffe0e0;
     }
+    .date-info {
+      font-size: 0.9rem;
+      color: #444;
+      margin-top: 0.5rem;
+    }
   </style>
 </head>
 <body>
   <h1>Занятость рабочих мест</h1>
-  <div id="places"></div>
+
+  <div class="section-title">Рабочие места</div>
+  <div class="grid" id="main-places"></div>
+
+  <div class="section-title">Админ-зона</div>
+  <div id="admin-place" class="place"></div>
 
   <script>
-    const places = ['Стол 1', 'Стол 2', 'Стол 3', 'Стол 4', 'Стол 5'];
+    const mainPlaces = Array.from({ length: 12 }, (_, i) => `Стол ${i + 1}`);
+    const adminPlace = 'Админ-стол';
     const state = JSON.parse(localStorage.getItem('placesState')) || {};
 
+    function promptDates(place) {
+      const current = state[place] || {};
+      const dateFrom = prompt('Дата начала бронирования (например, 21.03.2025):', current.dateFrom || '');
+      if (dateFrom === null) return;
+
+      const dateTo = prompt('Дата окончания бронирования:', current.dateTo || '');
+      if (dateTo === null) return;
+
+      state[place] = {
+        occupied: true,
+        dateFrom,
+        dateTo
+      };
+    }
+
     const render = () => {
-      const container = document.getElementById('places');
-      container.innerHTML = '';
-      places.forEach((place) => {
+      const mainContainer = document.getElementById('main-places');
+      const adminContainer = document.getElementById('admin-place');
+
+      mainContainer.innerHTML = '';
+
+      [...mainPlaces, adminPlace].forEach((place) => {
+        const data = state[place] || {};
+        const isOccupied = data.occupied;
+
         const div = document.createElement('div');
-        const isOccupied = state[place];
         div.className = `place ${isOccupied ? 'occupied' : 'free'}`;
-        div.textContent = `${place} — ${isOccupied ? 'ЗАНЯТО' : 'СВОБОДНО'}`;
+        div.innerHTML = `${place}\n${isOccupied ? 'ЗАНЯТО' : 'СВОБОДНО'}`;
+
+        if (isOccupied && data.dateFrom && data.dateTo) {
+          div.innerHTML += `\n📅 ${data.dateFrom} → ${data.dateTo}`;
+        }
+
         div.onclick = () => {
-          state[place] = !state[place];
+          if (isOccupied) {
+            const confirmClear = confirm(`Освободить ${place}?`);
+            if (confirmClear) {
+              delete state[place];
+            }
+          } else {
+            promptDates(place);
+          }
           localStorage.setItem('placesState', JSON.stringify(state));
           render();
         };
-        container.appendChild(div);
+
+        if (place === adminPlace) {
+          adminContainer.innerHTML = '';
+          adminContainer.replaceWith(div);
+          div.id = 'admin-place';
+        } else {
+          mainContainer.appendChild(div);
+        }
       });
     };
 
@@ -54,4 +122,3 @@
   </script>
 </body>
 </html>
-
