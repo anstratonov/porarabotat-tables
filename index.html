@@ -60,7 +60,7 @@
   <div class="grid" id="places"></div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxSl65FcnziV3B-hbOY1NjKM7ZkU953jD1hwMHpgr5y9Gh12_8jBVjLCTocJkqtg2hVsQ/exec"; // <-- Вставь сюда свой API URL из Apps Script
+    const API_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLi9ap4Gef3H0f1ZzZ0XZsMKDYYhNFPMHW0UICA_-oS82rnXCBGsvm1hRmMWnQ9pt9-4Lhavpk_pO56kj-oDtVwm6yGa9wDx6Vm87BwGRYJRcJKX7P2IUxHgWA5zVo1thcVoUWjjHJ-gybl0oibEaAAcTCZ_LVxUmKeXq1tmT2X6TjBLP8sC--LPyJlBtB_gBLGE0iV2zGlnYrsimlnGO8TuoggeYk3eL2nlTPLvySK_UUjnFw_c4G8bLMAsRDmLK3XOVevYhpfTXmjddidtvUcSiJOJyhEgVgDgUmL0&lib=MQRUkQpkM9nFPorKpRDP0ujLz5VTH6pl6"; // <-- Вставь сюда свой API URL из Apps Script
 
     async function fetchData() {
       const res = await fetch(API_URL);
@@ -78,62 +78,46 @@
       });
     }
 
-    function createCard(place) {
-      const container = document.createElement('div');
-      container.className = 'place' + (place['Занято'] === 'да' ? ' occupied' : '');
-
-      const title = document.createElement('h3');
-      title.textContent = place['Место'];
-      container.appendChild(title);
-
-      const fields = ['Имя', 'От', 'До'];
-      fields.forEach(field => {
-        const label = document.createElement('label');
-        label.textContent = field;
-        const input = document.createElement('input');
-        input.value = place[field] || '';
-        input.dataset.field = field;
-        container.appendChild(label);
-        container.appendChild(input);
-      });
-
-      const toggleLabel = document.createElement('label');
-      toggleLabel.textContent = 'Занято';
-      const statusInput = document.createElement('input');
-      statusInput.type = 'checkbox';
-      statusInput.checked = place['Занято'] === 'да';
-      container.appendChild(toggleLabel);
-      container.appendChild(statusInput);
-
-      const saveBtn = document.createElement('button');
-      saveBtn.className = 'save-btn';
-      saveBtn.textContent = 'Сохранить';
-      saveBtn.onclick = async () => {
-        const updated = {
-          'Место': place['Место'],
-          'Занято': statusInput.checked ? 'да' : 'нет',
-          'Имя': container.querySelector('input[data-field="Имя"]').value,
-          'От': container.querySelector('input[data-field="От"]').value,
-          'До': container.querySelector('input[data-field="До"]').value
-        };
-        await sendUpdate(updated);
-        loadAndRender(); // обновим UI после сохранения
-      };
-      container.appendChild(saveBtn);
-
-      return container;
-    }
-
     async function loadAndRender() {
       const placesData = await fetchData();
+      console.log("Полученные данные:", placesData);
+      
       const container = document.getElementById('places');
       container.innerHTML = '';
+
       placesData.forEach(place => {
-        container.appendChild(createCard(place));
+        const div = document.createElement('div');
+        const isOccupied = place['Занято'] === 'да';
+
+        div.className = `place ${isOccupied ? 'occupied' : 'free'}`;
+        div.innerHTML = `<h3>${place['Место']}</h3>
+                         <p>Статус: ${isOccupied ? '🚫 ЗАНЯТО' : '✅ СВОБОДНО'}</p>
+                         <label>Имя:</label>
+                         <input value="${place['Имя'] || ''}" data-field="Имя">
+                         <label>От:</label>
+                         <input type="date" value="${place['От'] || ''}" data-field="От">
+                         <label>До:</label>
+                         <input type="date" value="${place['До'] || ''}" data-field="До">
+                         <button class="save-btn">Сохранить</button>`;
+
+        div.querySelector(".save-btn").onclick = async () => {
+          const updated = {
+            'Место': place['Место'],
+            'Занято': isOccupied ? 'нет' : 'да',
+            'Имя': div.querySelector('input[data-field="Имя"]').value,
+            'От': div.querySelector('input[data-field="От"]').value,
+            'До': div.querySelector('input[data-field="До"]').value
+          };
+          await sendUpdate(updated);
+          loadAndRender();
+        };
+
+        container.appendChild(div);
       });
     }
 
-    // Первая загрузка
     loadAndRender();
-
-    // Автообновление каж
+    setInterval(loadAndRender, 30000);
+  </script>
+</body>
+</html>
