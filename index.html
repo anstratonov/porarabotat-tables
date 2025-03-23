@@ -8,13 +8,18 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            margin: 20px 0;
         }
         .workspace {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            margin-top: 20px;
-            justify-items: center;
+            margin: 20px auto;
+            max-width: 800px;
         }
         .desk {
             width: 150px;
@@ -24,8 +29,12 @@
             cursor: pointer;
             font-weight: bold;
         }
-        .free { background-color: #b2fab4; } /* Зелёный - свободно */
-        .occupied { background-color: #ff726f; } /* Красный - занято */
+        .free {
+            background-color: #b2fab4; /* Зелёный - свободно */
+        }
+        .occupied {
+            background-color: #ff726f; /* Красный - занято */
+        }
     </style>
 </head>
 <body>
@@ -34,8 +43,10 @@
     <div id="workspace" class="workspace"></div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycby6-YDoxUm7m8u0Wn58II4HG7M1aMdckze77yo2PfN3w-AKzQua212EGyOjkY3NncV96A/exec";
+        // URL вашего API Google Apps Script
+        const API_URL = "https://script.google.com/macros/s/AKfycbyXkKSJXzkxr7WIKt09VC86QRJYK4HSk_nxiXo4IWuy25Eo27NjSEB_eo-iO5mRUNA7ug/exec"; // Замените на ваш URL
 
+        // Функция для получения данных из таблицы
         async function fetchData() {
             try {
                 let response = await fetch(API_URL);
@@ -43,12 +54,14 @@
                 renderDesks(data);
             } catch (error) {
                 console.error("Ошибка загрузки данных:", error);
+                alert("Не удалось загрузить данные. Проверьте подключение к серверу.");
             }
         }
 
+        // Функция для отображения столов
         function renderDesks(data) {
             const workspace = document.getElementById("workspace");
-            workspace.innerHTML = "";
+            workspace.innerHTML = ""; // Очищаем контейнер перед обновлением
 
             data.forEach(place => {
                 const div = document.createElement("div");
@@ -62,6 +75,7 @@
             });
         }
 
+        // Функция для изменения статуса стола
         async function toggleDeskStatus(desk, newStatus) {
             try {
                 await fetch(API_URL, {
@@ -69,15 +83,18 @@
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ "Место": desk, "Занято": newStatus })
                 });
-                fetchData(); // Обновляем данные
+                fetchData(); // Обновляем данные после изменения статуса
             } catch (error) {
                 console.error("Ошибка при изменении статуса:", error);
+                alert("Не удалось изменить статус. Проверьте подключение к серверу.");
             }
         }
 
         // Автоматическое обновление каждые 30 секунд
         setInterval(fetchData, 30000);
-        fetchData(); // Первичная загрузка
+        
+        // Первичная загрузка данных при открытии страницы
+        fetchData();
     </script>
 
 </body>
