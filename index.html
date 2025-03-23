@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Занятость рабочих мест</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
+    body { font-family: Arial, sans-serif; text-align: center; }
     .workspace {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -29,17 +26,16 @@
   </style>
 </head>
 <body>
-
   <h1>Занятость рабочих мест</h1>
   <div id="workspace" class="workspace"></div>
 
   <script>
-    const BASE_URL = "https://script.google.com/macros/s/AKfycbzB13oS-uVi7DdNXQjydCzMMZQJDepmlIoxNFSvycMpqe_JAizTw3phOT2fC36tn9l1YQ/exec";
+    const BASE_URL = "https://script.google.com/macros/s/AKfycbzB13oS-uVi7DdNXQjydCzMMZQJDepmlIoxNFSvycMpqe_JAizTw3phOT2fC36tn9l1YQ/exec"; // Замени
 
     async function fetchData() {
       try {
-        const response = await fetch(`${BASE_URL}?method=GET`);
-        const data = await response.json();
+        const res = await fetch(`${BASE_URL}?method=GET`);
+        const data = await res.json();
         renderDesks(data);
       } catch (error) {
         console.error("Ошибка загрузки данных:", error);
@@ -52,45 +48,29 @@
 
       data.forEach(place => {
         const div = document.createElement("div");
-        div.className = `desk ${place["Занято"] === "да" ? "occupied" : "free"}`;
-        div.textContent = place["Место"];
-
-        div.onclick = () => {
-          const новоеЗначение = place["Занято"] === "да" ? "нет" : "да";
-          toggleDeskStatus(place["Место"], новоеЗначение);
-        };
-
+        div.className = `desk ${place["\u0417\u0430\u043d\u044f\u0442\u043e"] === "\u0434\u0430" ? "occupied" : "free"}`;
+        div.textContent = place["\u041c\u0435\u0441\u0442\u043e"];
+        div.onclick = () => toggleDeskStatus(place["\u041c\u0435\u0441\u0442\u043e"], place["\u0417\u0430\u043d\u044f\u0442\u043e"] === "\u0434\u0430" ? "\u043d\u0435\u0442" : "\u0434\u0430");
         workspace.appendChild(div);
       });
     }
 
-    async function toggleDeskStatus(место, новоеЗанято) {
+    async function toggleDeskStatus(место, занято) {
       try {
-        const response = await fetch(`${BASE_URL}?method=POST`, {
+        const res = await fetch(`${BASE_URL}?method=POST`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            "Место": место,
-            "Занято": новоеЗанято,
-            "От": "",
-            "До": ""
-          })
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ "Место": место, "Занято": занято, "От": "", "До": "" })
         });
-
-        const result = await response.json();
-        if (result.status === "OK") {
-          fetchData(); // обновить после изменения
-        } else {
-          console.error("Ошибка сохранения:", result);
-        }
+        const result = await res.json();
+        if (result.status === "OK") fetchData();
       } catch (error) {
-        console.error("Ошибка при обновлении:", error);
+        console.error("Ошибка при изменении статуса:", error);
       }
     }
 
-    fetchData(); // первая загрузка
-    setInterval(fetchData, 30000); // автообновление раз в 30 сек
+    fetchData();
+    setInterval(fetchData, 30000);
   </script>
-
 </body>
 </html>
