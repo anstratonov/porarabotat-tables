@@ -86,11 +86,34 @@
             toggleDeskStatus(place["Место"], "нет", "", "", "");
           } else {
             const имя = prompt("Введите ваше имя:");
-            const от = prompt("С какого времени (например, 10:00)?");
-            const до = prompt("До какого времени (например, 14:00)?");
-            if (имя && от && до) {
-              toggleDeskStatus(place["Место"], "да", от, до, имя);
-            }
+
+            const отInput = document.createElement("input");
+            отInput.type = "date";
+            отInput.placeholder = "От";
+            отInput.style.margin = "8px";
+            document.body.appendChild(отInput);
+            отInput.focus();
+
+            отInput.onchange = () => {
+              const от = отInput.value;
+              отInput.remove();
+
+              const доInput = document.createElement("input");
+              доInput.type = "date";
+              доInput.placeholder = "До";
+              доInput.style.margin = "8px";
+              document.body.appendChild(доInput);
+              доInput.focus();
+
+              доInput.onchange = () => {
+                const до = доInput.value;
+                доInput.remove();
+
+                if (имя && от && до) {
+                  toggleDeskStatus(place["Место"], "да", от, до, имя);
+                }
+              };
+            };
           }
         };
         workspace.appendChild(div);
