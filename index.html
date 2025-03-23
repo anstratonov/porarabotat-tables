@@ -50,6 +50,7 @@
         async function fetchData() {
             try {
                 let response = await fetch(API_URL);
+                if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
                 let data = await response.json();
                 renderDesks(data);
             } catch (error) {
@@ -78,11 +79,12 @@
         // Функция для изменения статуса стола
         async function toggleDeskStatus(desk, newStatus) {
             try {
-                await fetch(API_URL, {
+                let response = await fetch(API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ "Место": desk, "Занято": newStatus })
                 });
+                if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
                 fetchData(); // Обновляем данные после изменения статуса
             } catch (error) {
                 console.error("Ошибка при изменении статуса:", error);
