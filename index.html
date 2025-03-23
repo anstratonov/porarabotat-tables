@@ -1,103 +1,96 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Занятость рабочих мест</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 0;
-            padding: 0;
-        }
-        h1 {
-            margin: 20px 0;
-        }
-        .workspace {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 20px auto;
-            max-width: 800px;
-        }
-        .desk {
-            width: 150px;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .free {
-            background-color: #b2fab4; /* Зелёный - свободно */
-        }
-        .occupied {
-            background-color: #ff726f; /* Красный - занято */
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Занятость рабочих мест</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    .workspace {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+      justify-items: center;
+    }
+    .desk {
+      width: 150px;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .free { background-color: #b2fab4; }
+    .occupied { background-color: #ff726f; }
+  </style>
 </head>
 <body>
 
-    <h1>Занятость рабочих мест</h1>
-    <div id="workspace" class="workspace"></div>
+  <h1>Занятость рабочих мест</h1>
+  <div id="workspace" class="workspace"></div>
 
-    <script>
-        // URL вашего API Google Apps Script
-        const API_URL = "https://script.google.com/macros/s/AKfycbzB13oS-uVi7DdNXQjydCzMMZQJDepmlIoxNFSvycMpqe_JAizTw3phOT2fC36tn9l1YQ/exec"; // Замените на ваш URL
+  <script>
+    const BASE_URL = "https://script.google.com/macros/s/AKfycbzB13oS-uVi7DdNXQjydCzMMZQJDepmlIoxNFSvycMpqe_JAizTw3phOT2fC36tn9l1YQ/exec";
 
-        // Функция для получения данных из таблицы
-        async function fetchData() {
-            try {
-                let response = await fetch(API_URL);
-                if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
-                let data = await response.json();
-                renderDesks(data);
-            } catch (error) {
-                console.error("Ошибка загрузки данных:", error);
-                alert("Не удалось загрузить данные. Проверьте подключение к серверу.");
-            }
+    async function fetchData() {
+      try {
+        const response = await fetch(`${BASE_URL}?method=GET`);
+        const data = await response.json();
+        renderDesks(data);
+      } catch (error) {
+        console.error("Ошибка загрузки данных:", error);
+      }
+    }
+
+    function renderDesks(data) {
+      const workspace = document.getElementById("workspace");
+      workspace.innerHTML = "";
+
+      data.forEach(place => {
+        const div = document.createElement("div");
+        div.className = `desk ${place["Занято"] === "да" ? "occupied" : "free"}`;
+        div.textContent = place["Место"];
+
+        div.onclick = () => {
+          const новоеЗначение = place["Занято"] === "да" ? "нет" : "да";
+          toggleDeskStatus(place["Место"], новоеЗначение);
+        };
+
+        workspace.appendChild(div);
+      });
+    }
+
+    async function toggleDeskStatus(место, новоеЗанято) {
+      try {
+        const response = await fetch(`${BASE_URL}?method=POST`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            "Место": место,
+            "Занято": новоеЗанято,
+            "От": "",
+            "До": ""
+          })
+        });
+
+        const result = await response.json();
+        if (result.status === "OK") {
+          fetchData(); // обновить после изменения
+        } else {
+          console.error("Ошибка сохранения:", result);
         }
+      } catch (error) {
+        console.error("Ошибка при обновлении:", error);
+      }
+    }
 
-        // Функция для отображения столов
-        function renderDesks(data) {
-            const workspace = document.getElementById("workspace");
-            workspace.innerHTML = ""; // Очищаем контейнер перед обновлением
-
-            data.forEach(place => {
-                const div = document.createElement("div");
-                div.className = `desk ${place["Занято"] === "да" ? "occupied" : "free"}`;
-                div.textContent = place["Место"];
-
-                // Клик по столу - меняем статус
-                div.onclick = () => toggleDeskStatus(place["Место"], place["Занято"] === "да" ? "нет" : "да");
-                
-                workspace.appendChild(div);
-            });
-        }
-
-        // Функция для изменения статуса стола
-        async function toggleDeskStatus(desk, newStatus) {
-            try {
-                let response = await fetch(API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ "Место": desk, "Занято": newStatus })
-                });
-                if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
-                fetchData(); // Обновляем данные после изменения статуса
-            } catch (error) {
-                console.error("Ошибка при изменении статуса:", error);
-                alert("Не удалось изменить статус. Проверьте подключение к серверу.");
-            }
-        }
-
-        // Автоматическое обновление каждые 30 секунд
-        setInterval(fetchData, 30000);
-        
-        // Первичная загрузка данных при открытии страницы
-        fetchData();
-    </script>
+    fetchData(); // первая загрузка
+    setInterval(fetchData, 30000); // автообновление раз в 30 сек
+  </script>
 
 </body>
 </html>
