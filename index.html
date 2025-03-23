@@ -23,23 +23,47 @@
     }
     .free { background-color: #b2fab4; }
     .occupied { background-color: #ff726f; }
+    .progress-container {
+      width: 100%;
+      height: 4px;
+      background-color: #e0e0e0;
+      margin-top: 10px;
+      position: relative;
+    }
+    .progress-bar {
+      height: 100%;
+      background-color: #007bff;
+      width: 0%;
+      transition: width 0.5s ease-in-out;
+    }
   </style>
 </head>
 <body>
   <h1>Занятость рабочих мест</h1>
+  <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
   <div id="workspace" class="workspace"></div>
 
   <script>
-    const BASE_URL = "https://script.google.com/macros/s/AKfycbzUVhHuU4pCXwnW7TpzF-cwfzDGROtIgGc-YUqZmXRljHiwime8mOagvu1Uuf5ySK8QtA/exec"; // Замени
+    const BASE_URL = "https://script.google.com/macros/s/YOUR_DEPLOYED_URL/exec"; // Замени
 
     async function fetchData() {
+      updateProgress(10);
       try {
         const res = await fetch(`${BASE_URL}?method=GET`);
+        updateProgress(40);
         const data = await res.json();
+        updateProgress(80);
         renderDesks(data);
+        updateProgress(100);
+        setTimeout(() => updateProgress(0), 500);
       } catch (error) {
         console.error("Ошибка загрузки данных:", error);
+        updateProgress(0);
       }
+    }
+
+    function updateProgress(percent) {
+      document.getElementById("progressBar").style.width = percent + "%";
     }
 
     function renderDesks(data) {
@@ -48,19 +72,37 @@
 
       data.forEach(place => {
         const div = document.createElement("div");
-        div.className = `desk ${place["\u0417\u0430\u043d\u044f\u0442\u043e"] === "\u0434\u0430" ? "occupied" : "free"}`;
-        div.textContent = place["\u041c\u0435\u0441\u0442\u043e"];
-        div.onclick = () => toggleDeskStatus(place["\u041c\u0435\u0441\u0442\u043e"], place["\u0417\u0430\u043d\u044f\u0442\u043e"] === "\u0434\u0430" ? "\u043d\u0435\u0442" : "\u0434\u0430");
+        div.className = `desk ${place["Занято"] === "да" ? "occupied" : "free"}`;
+
+        div.innerHTML = `
+          <div><strong>${place["Место"]}</strong></div>
+          <div>${place["Занято"] === "да" ? "Занято" : "Свободно"}</div>
+          ${place["Занято"] === "да" ? `<div><small>${place["Имя"] || ""}</small></div>
+          <div><small>${place["От"] || ""} — ${place["До"] || ""}</small></div>` : ""}
+        `;
+
+        div.onclick = () => {
+          if (place["Занято"] === "да") {
+            toggleDeskStatus(place["Место"], "нет", "", "", "");
+          } else {
+            const имя = prompt("Введите ваше имя:");
+            const от = prompt("С какого времени (например, 10:00)?");
+            const до = prompt("До какого времени (например, 14:00)?");
+            if (имя && от && до) {
+              toggleDeskStatus(place["Место"], "да", от, до, имя);
+            }
+          }
+        };
         workspace.appendChild(div);
       });
     }
 
-    async function toggleDeskStatus(место, занято) {
+    async function toggleDeskStatus(место, занято, от = "", до = "", имя = "") {
       try {
         const res = await fetch(`${BASE_URL}?method=POST`, {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ "Место": место, "Занято": занято, "От": "", "До": "" })
+          body: JSON.stringify({ "Место": место, "Занято": занято, "От": от, "До": до, "Имя": имя })
         });
         const result = await res.json();
         if (result.status === "OK") fetchData();
