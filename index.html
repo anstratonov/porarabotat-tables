@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -98,7 +97,7 @@
 
   <script>
     const BASE_URL = "https://script.google.com/macros/s/AKfycbxuOqkMiksBFynbAKF0b834P90G9Ye7Vat3nlWUYCLe-vHmNawZqMmGo7G2ISAaBcw2sA/exec";
-  
+
     async function fetchData() {
       updateProgress(10);
       try {
@@ -114,41 +113,50 @@
         updateProgress(0);
       }
     }
-  
+
     function updateProgress(p) {
       document.getElementById("progressBar").style.width = p + "%";
     }
-  
+
     function isExpired(dateStr) {
       if (!dateStr) return false;
       const now = new Date();
-      const toDate = new Date(dateStr + "T23:59:59");
+      const toDate = new Date(dateStr);
       return now > toDate;
     }
-  
+
     const positions = {
       1: "s1", 2: "s2", 3: "s3", 4: "s4", 5: "s5",
       6: "s6", 7: "s7", 8: "s8", 9: "s9", 10: "s10", 11: "s11", 12: "s12"
     };
-  
+
+    function getLocationLabel(id) {
+      if (id >= 1 && id <= 5) return "Комната 1, у окна";
+      if (id >= 6 && id <= 8) return "Комната 2, у окна";
+      if (id >= 9 && id <= 12) return "Комната 2, у стены";
+      return "";
+    }
+
     function renderDesks(data) {
       const container = document.getElementById("workspace");
       container.innerHTML = "";
-  
+
       data.forEach(place => {
-        const seatId = parseInt(place["Место"].replace(/\D/g, ""));
+        const seatId = parseInt(place["Место"].replace(/\\D/g, ""));
         if (!positions[seatId]) return;
+
         const expired = place["До"] && isExpired(place["До"]);
         const isOccupied = place["Занято"] === "да" && !expired;
-  
+
         const desk = document.createElement("div");
         desk.className = "desk" + (isOccupied ? " occupied" : "");
         desk.style.gridArea = positions[seatId];
         desk.innerHTML = `
           <div><strong>${seatId}</strong></div>
+          <div><small>${getLocationLabel(seatId)}</small></div>
           <div>${isOccupied ? "Занято" : "Свободно"}</div>
           ${isOccupied ? `<div><small>${place["Имя"] || ""}</small></div>
-          <div><small>${place["От"] || ""} – ${place["До"] || ""}</small></div>` : ""}
+          <div><small>${place["От"]?.split("T")[0] || ""} – ${place["До"]?.split("T")[0] || ""}</small></div>` : ""}
         `;
         if (!isOccupied) {
           desk.onclick = () => showModal(seatId);
@@ -158,7 +166,7 @@
         container.appendChild(desk);
       });
     }
-  
+
     function showModal(seatId) {
       document.getElementById("modalContainer").innerHTML = `
         <div class="modal-bg">
@@ -172,7 +180,7 @@
         </div>
       `;
     }
-  
+
     async function submitBooking(seatId) {
       const имя = document.getElementById("userName").value;
       const от = document.getElementById("fromDate").value;
@@ -183,7 +191,7 @@
           const res = await fetch(BASE_URL + "?method=POST", {
             method: "POST",
             headers: { "Content-Type": "text/plain" },
-            body: JSON.stringify({ "Место": seatId, "Занято": "да", "От": от, "До": до, "Имя": имя })
+            body: JSON.stringify({ "Место": "Стол " + seatId, "Занято": "да", "От": от, "До": до, "Имя": имя })
           });
           const result = await res.json();
           if (result.status === "OK") fetchData();
@@ -192,7 +200,7 @@
         }
       }
     }
-  
+
     function showCancelModal(seatId) {
       document.getElementById("modalContainer").innerHTML = `
         <div class="modal-bg">
@@ -205,22 +213,22 @@
         </div>
       `;
     }
-  
+
     async function cancelBooking(seatId) {
       document.getElementById("modalContainer").innerHTML = "";
       try {
         const res = await fetch(BASE_URL + "?method=POST", {
           method: "POST",
           headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ "Место": seatId, "Занято": "нет", "Имя": "", "От": "", "До": "" })
+          body: JSON.stringify({ "Место": "Стол " + seatId, "Занято": "нет", "Имя": "", "От": "", "До": "" })
         });
         const result = await res.json();
         if (result.status === "OK") fetchData();
       } catch (e) {
-        console.error("Ошибка отмены брони:", e);
+        console.error("Ошибка отмены бронирования:", e);
       }
     }
-  
+
     fetchData();
     setInterval(fetchData, 30000);
   </script>
