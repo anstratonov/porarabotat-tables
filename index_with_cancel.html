@@ -97,7 +97,7 @@
   <div id="modalContainer"></div>
 
   <script>
-    const BASE_URL = "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec"; // замените на ваш
+    const BASE_URL = "https://script.google.com/macros/s/AKfycbxuOqkMiksBFynbAKF0b834P90G9Ye7Vat3nlWUYCLe-vHmNawZqMmGo7G2ISAaBcw2sA/exec"; // замените на ваш
 
     async function fetchData() {
       updateProgress(10);
@@ -193,6 +193,34 @@
         }
       }
     }
+
+    function showCancelModal(seatId) {
+    document.getElementById("modalContainer").innerHTML = `
+      <div class="modal-bg">
+        <div class="modal">
+          <h3>Отмена бронирования места ${seatId}</h3>
+          <p>Вы уверены, что хотите отменить бронирование?</p>
+          <button onclick="cancelBooking('${seatId}')" style="background-color:#dc3545;margin-top:10px;">Отменить</button>
+          <button onclick="document.getElementById('modalContainer').innerHTML = ''" style="margin-top:10px;">Отмена</button>
+        </div>
+      </div>
+    `;
+  }
+
+  async function cancelBooking(seatId) {
+    document.getElementById("modalContainer").innerHTML = "";
+    try {
+      const res = await fetch(BASE_URL + "?method=POST", {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ "Место": seatId, "Занято": "нет", "Имя": "", "От": "", "До": "" })
+      });
+      const result = await res.json();
+      if (result.status === "OK") fetchData();
+    } catch (e) {
+      console.error("Ошибка отмены:", e);
+    }
+  }
 
     fetchData();
     setInterval(fetchData, 30000);

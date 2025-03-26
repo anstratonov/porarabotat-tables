@@ -97,8 +97,8 @@
   <div id="modalContainer"></div>
 
   <script>
-    const BASE_URL = "https://script.google.com/macros/s/AKfycbxuOqkMiksBFynbAKF0b834P90G9Ye7Vat3nlWUYCLe-vHmNawZqMmGo7G2ISAaBcw2sA/exec"; // замените на ваш
-
+    const BASE_URL = "https://script.google.com/macros/s/AKfycbxuOqkMiksBFynbAKF0b834P90G9Ye7Vat3nlWUYCLe-vHmNawZqMmGo7G2ISAaBcw2sA/exec";
+  
     async function fetchData() {
       updateProgress(10);
       try {
@@ -114,32 +114,32 @@
         updateProgress(0);
       }
     }
-
+  
     function updateProgress(p) {
       document.getElementById("progressBar").style.width = p + "%";
     }
-
+  
     function isExpired(dateStr) {
       if (!dateStr) return false;
       const now = new Date();
       const toDate = new Date(dateStr + "T23:59:59");
       return now > toDate;
     }
-
+  
     const positions = {
       1: "s1", 2: "s2", 3: "s3", 4: "s4", 5: "s5",
       6: "s6", 7: "s7", 8: "s8", 9: "s9", 10: "s10", 11: "s11", 12: "s12"
     };
-
+  
     function renderDesks(data) {
       const container = document.getElementById("workspace");
       container.innerHTML = "";
-
+  
       data.forEach(place => {
         const seatId = parseInt(place["Место"]);
         const expired = place["До"] && isExpired(place["До"]);
         const isOccupied = place["Занято"] === "да" && !expired;
-
+  
         const desk = document.createElement("div");
         desk.className = "desk" + (isOccupied ? " occupied" : "");
         desk.style.gridArea = positions[seatId];
@@ -154,12 +154,10 @@
         } else {
           desk.onclick = () => showCancelModal(seatId);
         }
-          desk.onclick = () => showModal(seatId);
-        }
         container.appendChild(desk);
       });
     }
-
+  
     function showModal(seatId) {
       document.getElementById("modalContainer").innerHTML = `
         <div class="modal-bg">
@@ -173,7 +171,7 @@
         </div>
       `;
     }
-
+  
     async function submitBooking(seatId) {
       const имя = document.getElementById("userName").value;
       const от = document.getElementById("fromDate").value;
@@ -193,40 +191,37 @@
         }
       }
     }
-
+  
+    function showCancelModal(seatId) {
+      document.getElementById("modalContainer").innerHTML = `
+        <div class="modal-bg">
+          <div class="modal">
+            <h3>Отмена бронирования места ${seatId}</h3>
+            <p>Вы уверены, что хотите отменить бронирование?</p>
+            <button onclick="cancelBooking('${seatId}')" style="background-color:#dc3545;margin-top:10px;">Отменить</button>
+            <button onclick="document.getElementById('modalContainer').innerHTML = ''" style="margin-top:10px;">Закрыть</button>
+          </div>
+        </div>
+      `;
+    }
+  
+    async function cancelBooking(seatId) {
+      document.getElementById("modalContainer").innerHTML = "";
+      try {
+        const res = await fetch(BASE_URL + "?method=POST", {
+          method: "POST",
+          headers: { "Content-Type": "text/plain" },
+          body: JSON.stringify({ "Место": seatId, "Занято": "нет", "Имя": "", "От": "", "До": "" })
+        });
+        const result = await res.json();
+        if (result.status === "OK") fetchData();
+      } catch (e) {
+        console.error("Ошибка отмены брони:", e);
+      }
+    }
+  
     fetchData();
     setInterval(fetchData, 30000);
   </script>
 </body>
 </html>
-
-
-<script>
-  function showCancelModal(seatId) {
-    document.getElementById("modalContainer").innerHTML = `
-      <div class="modal-bg">
-        <div class="modal">
-          <h3>Отмена бронирования места ${seatId}</h3>
-          <p>Вы уверены, что хотите отменить бронирование?</p>
-          <button onclick="cancelBooking('${seatId}')" style="background-color:#dc3545;margin-top:10px;">Отменить</button>
-          <button onclick="document.getElementById('modalContainer').innerHTML = ''" style="margin-top:10px;">Отмена</button>
-        </div>
-      </div>
-    `;
-  }
-
-  async function cancelBooking(seatId) {
-    document.getElementById("modalContainer").innerHTML = "";
-    try {
-      const res = await fetch(BASE_URL + "?method=POST", {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({ "Место": seatId, "Занято": "нет", "Имя": "", "От": "", "До": "" })
-      });
-      const result = await res.json();
-      if (result.status === "OK") fetchData();
-    } catch (e) {
-      console.error("Ошибка отмены:", e);
-    }
-  }
-</script>
