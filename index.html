@@ -142,9 +142,12 @@
       container.innerHTML = "";
 
       data.forEach(place => {
-        const seatId = parseInt(place["Место"].replace(/\\D/g, ""));
-        if (!positions[seatId]) return;
-
+        console.log("Место:", place["Место"]);
+        const extracted = place["Место"].replace(/\D/g, "");
+        console.log("→ после удаления нецифр:", extracted);
+        const seatId = parseInt(extracted);
+        console.log("→ seatId:", seatId, "→ positions[seatId]:", positions[seatId]);
+        
         const expired = place["До"] && isExpired(place["До"]);
         const isOccupied = place["Занято"] === "да" && !expired;
 
