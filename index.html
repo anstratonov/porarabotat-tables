@@ -137,6 +137,7 @@
   
       data.forEach(place => {
         const seatId = parseInt(place["Место"].replace(/\D/g, ""));
+        if (!positions[seatId]) return;
         const expired = place["До"] && isExpired(place["До"]);
         const isOccupied = place["Занято"] === "да" && !expired;
   
