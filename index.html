@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -138,25 +139,6 @@
       document.getElementById("progressBar").style.width = p + "%";
     }
 
-    function isExpired(dateStr) {
-      if (!dateStr) return false;
-      const now = new Date();
-      const toDate = new Date(dateStr);
-      return now > toDate;
-    }
-
-    const positions = {
-      1: "s1", 2: "s2", 3: "s3", 4: "s4", 5: "s5",
-      6: "s6", 7: "s7", 8: "s8", 9: "s9", 10: "s10", 11: "s11", 12: "s12"
-    };
-
-    function getLocationLabel(id) {
-      if (id >= 1 && id <= 5) return "Комната 1, у окна";
-      if (id >= 6 && id <= 8) return "Комната 2, у окна";
-      if (id >= 9 && id <= 12) return "Комната 2, у стены";
-      return "";
-    }
-
     function renderDesks(data) {
       const windowBlock = document.getElementById("window-seats");
       const wallBlock = document.getElementById("wall-seats");
@@ -167,36 +149,40 @@
       adminBlock.innerHTML = "";
 
       data.forEach(place => {
-        const raw = place["Место"];
-        const match = raw.match(/\\d+/);
-        const seatId = match ? parseInt(match[0]) : NaN;
+        const raw = place["Место"]?.trim() || "";
         const isAdmin = raw.toLowerCase().includes("админ");
-        const expired = place["До"] && isExpired(place["До"]);
+        const match = raw.match(/^Стол\s(\d{1,2})$/);
+        const seatId = match ? parseInt(match[1]) : NaN;
+
+        const expired = place["До"] && new Date() > new Date(place["До"]);
         const isOccupied = place["Занято"] === "да" && !expired;
 
-        const desk = document.createElement("div");
-        desk.className = "desk" + (isOccupied ? " occupied" : "") + (isAdmin ? " admin" : "");
-        desk.innerHTML = `
-          <div><strong>${isAdmin ? "Админ-стол" : seatId}</strong></div>
-          ${!isAdmin ? `<div><small>${getLocationLabel(seatId)}</small></div>` : ""}
+        const div = document.createElement("div");
+        div.className = "desk" + (isOccupied ? " occupied" : "") + (isAdmin ? " admin" : "");
+
+        if (isAdmin) {
+          div.innerHTML = `<div><strong>Админ-стол</strong></div><div>Свободно</div>`;
+          adminBlock.appendChild(div);
+          return;
+        }
+
+        if (!match || isNaN(seatId)) return;
+
+        div.innerHTML = `
+          <div><strong>${seatId}</strong></div>
+          <div><small>${seatId <= 5 ? "Комната 1, у окна" : seatId <= 8 ? "Комната 2, у окна" : "Комната 2, у стены"}</small></div>
           <div>${isOccupied ? "Занято" : "Свободно"}</div>
           ${isOccupied ? `<div><small>${place["Имя"] || "Неизвестно"}</small></div>
           <div><small>${place["От"]?.split("T")[0] || ""} – ${place["До"]?.split("T")[0] || ""}</small></div>` : ""}
         `;
-
-        if (!isOccupied && !isAdmin) {
-          desk.onclick = () => showModal(seatId);
-        } else if (!isAdmin) {
-          desk.onclick = () => showCancelModal(seatId);
+        if (!isOccupied) {
+          div.onclick = () => showModal(seatId);
+        } else {
+          div.onclick = () => showCancelModal(seatId);
         }
 
-        if (isAdmin) {
-          adminBlock.appendChild(desk);
-        } else if (seatId >= 1 && seatId <= 8) {
-          windowBlock.appendChild(desk);
-        } else if (seatId >= 9 && seatId <= 12) {
-          wallBlock.appendChild(desk);
-        }
+        if (seatId >= 1 && seatId <= 8) windowBlock.appendChild(div);
+        else if (seatId >= 9 && seatId <= 12) wallBlock.appendChild(div);
       });
     }
 
