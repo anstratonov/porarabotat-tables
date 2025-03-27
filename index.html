@@ -158,32 +158,45 @@
     }
 
     function renderDesks(data) {
-      const container = document.getElementById("workspace");
-      container.innerHTML = "";
+      const windowBlock = document.getElementById("window-seats");
+      const wallBlock = document.getElementById("wall-seats");
+      const adminBlock = document.getElementById("admin-seat");
+
+      windowBlock.innerHTML = "";
+      wallBlock.innerHTML = "";
+      adminBlock.innerHTML = "";
 
       data.forEach(place => {
-        const extracted = place["Место"].replace(/\D/g, "");
-        const seatId = parseInt(extracted);
-        
+        const raw = place["Место"];
+        const match = raw.match(/\\d+/);
+        const seatId = match ? parseInt(match[0]) : NaN;
+        const isAdmin = raw.toLowerCase().includes("админ");
         const expired = place["До"] && isExpired(place["До"]);
         const isOccupied = place["Занято"] === "да" && !expired;
 
         const desk = document.createElement("div");
-        desk.className = "desk" + (isOccupied ? " occupied" : "");
-        desk.style.gridArea = positions[seatId];
+        desk.className = "desk" + (isOccupied ? " occupied" : "") + (isAdmin ? " admin" : "");
         desk.innerHTML = `
-          <div><strong>${seatId}</strong></div>
-          <div><small>${getLocationLabel(seatId)}</small></div>
+          <div><strong>${isAdmin ? "Админ-стол" : seatId}</strong></div>
+          ${!isAdmin ? `<div><small>${getLocationLabel(seatId)}</small></div>` : ""}
           <div>${isOccupied ? "Занято" : "Свободно"}</div>
-          ${isOccupied ? `<div><small>${place["Имя"] || ""}</small></div>
+          ${isOccupied ? `<div><small>${place["Имя"] || "Неизвестно"}</small></div>
           <div><small>${place["От"]?.split("T")[0] || ""} – ${place["До"]?.split("T")[0] || ""}</small></div>` : ""}
         `;
-        if (!isOccupied) {
+
+        if (!isOccupied && !isAdmin) {
           desk.onclick = () => showModal(seatId);
-        } else {
+        } else if (!isAdmin) {
           desk.onclick = () => showCancelModal(seatId);
         }
-        container.appendChild(desk);
+
+        if (isAdmin) {
+          adminBlock.appendChild(desk);
+        } else if (seatId >= 1 && seatId <= 8) {
+          windowBlock.appendChild(desk);
+        } else if (seatId >= 9 && seatId <= 12) {
+          wallBlock.appendChild(desk);
+        }
       });
     }
 
