@@ -27,13 +27,13 @@
     }
     .workspace {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
-      gap: 12px;
+      overflow-x: auto;
       padding: 10px 20px;
+      gap: 10px;
     }
     .desk {
-      width: 140px;
+      min-width: 140px;
       border-radius: 12px;
       padding: 12px;
       text-align: center;
@@ -105,10 +105,10 @@
   <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
 
   <div class="section-title">Столы у окна</div>
-  <div id="window-seats" class="workspace" style="flex-wrap: nowrap; overflow-x: auto;"></div>
+  <div id="window-seats" class="workspace"></div>
 
   <div class="section-title">Столы у стены</div>
-  <div id="wall-seats" class="workspace" style="flex-wrap: nowrap; overflow-x: auto;"></div>
+  <div id="wall-seats" class="workspace"></div>
 
   <div class="section-title">Админ</div>
   <div id="admin-seat" class="workspace"></div>
