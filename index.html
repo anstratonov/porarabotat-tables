@@ -28,30 +28,56 @@
     }
     .workspace {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       overflow-x: auto;
       padding: 10px 20px;
       gap: 10px;
     }
     .desk {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      line-height: 1.4;
+      padding: 16px;
+      min-height: 160px;
+      background-color: #e0f8e9;
+      position: relative;
       min-width: 140px;
+      max-width: 160px;
+      flex: 1 1 auto;
+      border: 2px solid transparent;
       border-radius: 12px;
-      padding: 12px;
-      text-align: center;
-      font-weight: 500;
-      cursor: pointer;
-      background-color: #b2fab4;
-      transition: all 0.2s ease-in-out;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
     }
     .occupied {
-      background-color: #ffb3b3;
+      background-color: #f8c0c0;
     }
-    .desk:hover {
-      transform: scale(1.03);
+    .occupied-soon {
+      border-color: #ffa726; /* orange */
+    }
+    .occupied-urgent {
+      border-color: #ef5350; /* red */
+    }
+    .desk:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 6px 8px;
+      font-size: 12px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0.9;
     }
     .admin {
-      background-color: #d0d0ff;
+      background-color: #d8d8ff;
       font-style: italic;
     }
     .modal-bg {
@@ -148,17 +174,31 @@
       wallBlock.innerHTML = "";
       adminBlock.innerHTML = "";
 
+      const now = new Date();
+
       data.forEach(place => {
         const raw = place["Место"]?.trim() || "";
         const isAdmin = raw.toLowerCase().includes("админ");
         const match = raw.match(/^Стол\s(\d{1,2})$/);
         const seatId = match ? parseInt(match[1]) : NaN;
 
-        const expired = place["До"] && new Date() > new Date(place["До"]);
+        const toDate = place["До"] ? new Date(place["До"]) : null;
+        const daysLeft = toDate ? Math.ceil((toDate - now) / (1000 * 60 * 60 * 24)) : null;
+        const expired = toDate && now > toDate;
         const isOccupied = place["Занято"] === "да" && !expired;
 
         const div = document.createElement("div");
-        div.className = "desk" + (isOccupied ? " occupied" : "") + (isAdmin ? " admin" : "");
+        let classes = "desk";
+        if (isOccupied) classes += " occupied";
+        if (isOccupied && daysLeft !== null) {
+          if (daysLeft <= 3) classes += " occupied-urgent";
+          else if (daysLeft <= 7) classes += " occupied-soon";
+        }
+        if (isAdmin) classes += " admin";
+        div.className = classes;
+
+        const tooltip = isOccupied ? `Имя: ${place["Имя"] || "Неизвестно"}\n${place["От"]?.split("T")[0] || ""} – ${place["До"]?.split("T")[0] || ""}` : "Свободно";
+        div.setAttribute("data-tooltip", tooltip);
 
         if (isAdmin) {
           div.innerHTML = `<div><strong>Админ-стол</strong></div><div>Свободно</div>`;
@@ -169,10 +209,10 @@
         if (!match || isNaN(seatId)) return;
 
         div.innerHTML = `
-          <div><strong>${seatId}</strong></div>
-          <div><small>${seatId <= 5 ? "Комната 1, у окна" : seatId <= 8 ? "Комната 2, у окна" : "Комната 2, у стены"}</small></div>
-          <div>${isOccupied ? "Занято" : "Свободно"}</div>
-          ${isOccupied ? `<div><small>${place["Имя"] || "Неизвестно"}</small></div>
+          <div style="font-size:18px;"><strong>${seatId}</strong></div>
+          <div style="font-size:13px;">${seatId <= 5 ? "Комната 1, у окна" : seatId <= 8 ? "Комната 2, у окна" : "Комната 2, у стены"}</div>
+          <div style="font-weight:bold; margin-top:4px;">${isOccupied ? "Занято" : "Свободно"}</div>
+          ${isOccupied ? `<div><small>${place["Имя"] || "!!неизвестно!!"}</small></div>
           <div><small>${place["От"]?.split("T")[0] || ""} – ${place["До"]?.split("T")[0] || ""}</small></div>` : ""}
         `;
         if (!isOccupied) {
