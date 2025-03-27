@@ -1,99 +1,120 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Бронирование рабочих мест</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f4f8;
-      margin: 0;
-      padding: 0;
-    }
-    h1 {
-      text-align: center;
-      padding: 20px 0;
-    }
-    .workspace {
-      display: grid;
-      grid-template-areas:
-        "s1 s2 . . . ."
-        "s3 s4 . . . ."
-        "s5 .  . . . ."
-        "s6 s7 s8 . . ."
-        "s9 s10 s11 s12 . .";
-      gap: 10px;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .desk {
-      border-radius: 10px;
-      padding: 12px;
-      text-align: center;
-      font-weight: bold;
-      cursor: pointer;
-      background-color: #b2fab4;
-      transition: transform 0.2s;
-    }
-    .occupied {
-      background-color: #ff9a9e;
-    }
-    .desk:hover {
-      transform: scale(1.05);
-    }
-    .modal-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.3);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    .modal {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
-    }
-    .modal input {
-      width: 100%;
-      margin-bottom: 10px;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    .modal button {
-      background-color: #007bff;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      width: 100%;
-    }
-    .progress-container {
-      height: 4px;
-      background-color: #e0e0e0;
-      margin: 0 20px;
-      overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%;
-      background-color: #007bff;
-      width: 0%;
-      transition: width 0.5s ease-in-out;
-    }
-  </style>
-</head>
-<body>
-  <h1>Бронирование рабочих мест</h1>
-  <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
-  <div id="workspace" class="workspace"></div>
-  <div id="modalContainer"></div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Бронирование рабочих мест</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background-color: #f7f9fb;
+        margin: 0;
+        padding: 0;
+        color: #111;
+      }
+      h1 {
+        text-align: center;
+        padding: 20px 0 10px;
+        font-size: 24px;
+      }
+      .section-title {
+        text-align: center;
+        font-weight: 600;
+        font-size: 18px;
+        margin-top: 30px;
+        margin-bottom: 10px;
+        color: #333;
+      }
+      .workspace {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 12px;
+        padding: 10px 20px;
+      }
+      .desk {
+        width: 140px;
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        font-weight: 500;
+        cursor: pointer;
+        background-color: #b2fab4;
+        transition: all 0.2s ease-in-out;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      }
+      .occupied {
+        background-color: #ffb3b3;
+      }
+      .desk:hover {
+        transform: scale(1.03);
+      }
+      .admin {
+        background-color: #d0d0ff;
+        font-style: italic;
+      }
+      .modal-bg {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.3);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      .modal {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 400px;
+      }
+      .modal input {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+      }
+      .modal button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 14px;
+      }
+      .progress-container {
+        height: 4px;
+        background-color: #e0e0e0;
+        margin: 0 20px;
+      }
+      .progress-bar {
+        height: 100%;
+        background-color: #007bff;
+        width: 0%;
+        transition: width 0.5s ease-in-out;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Бронирование рабочих мест</h1>
+    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+  
+    <div class="section-title">Столы у окна</div>
+    <div id="window-seats" class="workspace"></div>
+  
+    <div class="section-title">Столы у стены</div>
+    <div id="wall-seats" class="workspace"></div>
+  
+    <div class="section-title">Админ</div>
+    <div id="admin-seat" class="workspace"></div>
+  
+    <div id="modalContainer"></div>
+  
 
   <script>
     const BASE_URL = "https://script.google.com/macros/s/AKfycbxuOqkMiksBFynbAKF0b834P90G9Ye7Vat3nlWUYCLe-vHmNawZqMmGo7G2ISAaBcw2sA/exec";
@@ -142,11 +163,8 @@
       container.innerHTML = "";
 
       data.forEach(place => {
-        console.log("Место:", place["Место"]);
         const extracted = place["Место"].replace(/\D/g, "");
-        console.log("→ после удаления нецифр:", extracted);
         const seatId = parseInt(extracted);
-        console.log("→ seatId:", seatId, "→ positions[seatId]:", positions[seatId]);
         
         const expired = place["До"] && isExpired(place["До"]);
         const isOccupied = place["Занято"] === "да" && !expired;
