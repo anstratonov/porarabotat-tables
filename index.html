@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -56,10 +55,10 @@
       background-color: #f8c0c0;
     }
     .occupied-soon {
-      border-color: #ffa726; /* orange */
+      border-color: #ffa726;
     }
     .occupied-urgent {
-      border-color: #ef5350; /* red */
+      border-color: #ef5350;
     }
     .desk:hover::after {
       content: attr(data-tooltip);
@@ -242,8 +241,10 @@
 
     async function submitBooking(seatId) {
       const имя = document.getElementById("userName").value;
-      const от = document.getElementById("fromDate").value;
-      const до = document.getElementById("toDate").value;
+      const отRaw = document.getElementById("fromDate").valueAsDate;
+      const доRaw = document.getElementById("toDate").valueAsDate;
+      const от = отRaw ? new Date(отRaw).toISOString().slice(0, 10) : "";
+      const до = доRaw ? new Date(доRaw).toISOString().slice(0, 10) : "";
       document.getElementById("modalContainer").innerHTML = "";
       if (имя && от && до) {
         try {
