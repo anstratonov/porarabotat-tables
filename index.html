@@ -181,10 +181,12 @@
         const match = raw.match(/^Стол\s(\d{1,2})$/);
         const seatId = match ? parseInt(match[1]) : NaN;
 
-        const toDateStr = place["До"];
-        const toDate = toDateStr && !isNaN(Date.parse(toDateStr)) ? new Date(toDateStr) : null;
-        const daysLeft = toDate ? Math.ceil((toDate - now) / (1000 * 60 * 60 * 24)) : null;
-        const expired = toDate && now > toDate;
+        const toDate = place["До"]
+          ? new Date(place["До"].replace(/-/g, "/"))
+          : null;
+
+        const expired = toDate && new Date() > toDate;
+        const isOccupied = place["Занято"] === "да" && !expired;
 
         const div = document.createElement("div");
         let classes = "desk";
