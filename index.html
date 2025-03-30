@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -55,10 +56,10 @@
       background-color: #f8c0c0;
     }
     .occupied-soon {
-      border-color: #ffa726;
+      border-color: #ffa726; /* orange */
     }
     .occupied-urgent {
-      border-color: #ef5350;
+      border-color: #ef5350; /* red */
     }
     .desk:hover::after {
       content: attr(data-tooltip);
@@ -181,7 +182,7 @@
         const match = raw.match(/^Стол\s(\d{1,2})$/);
         const seatId = match ? parseInt(match[1]) : NaN;
 
-        const toDate = place["До"] ? new Date(place["До"].replace(/-/g, "/")) : null;
+        const toDate = place["До"] ? new Date(place["До"]) : null;
         const daysLeft = toDate ? Math.ceil((toDate - now) / (1000 * 60 * 60 * 24)) : null;
         const expired = toDate && now > toDate;
         const isOccupied = place["Занято"] === "да" && !expired;
@@ -196,9 +197,7 @@
         if (isAdmin) classes += " admin";
         div.className = classes;
 
-        const tooltip = isOccupied
-          ? `Имя: ${place["Имя"] || "Неизвестно"}\n${place["От"]?.split("T")[0] || ""} – ${place["До"]?.split("T")[0] || ""}`
-          : "Свободно";
+        const tooltip = isOccupied ? `Имя: ${place["Имя"] || "Неизвестно"}\n${place["От"]?.split("T")[0] || ""} – ${place["До"]?.split("T")[0] || ""}` : "Свободно";
         div.setAttribute("data-tooltip", tooltip);
 
         if (isAdmin) {
@@ -216,19 +215,16 @@
           ${isOccupied ? `<div><small>${place["Имя"] || "!!неизвестно!!"}</small></div>
           <div><small>${place["От"]?.split("T")[0] || ""} – ${place["До"]?.split("T")[0] || ""}</small></div>` : ""}
         `;
-
-        div.onclick = () => {
-          if (isOccupied) {
-            showCancelModal(seatId);
-          } else {
-            showModal(seatId);
-          }
-        };
+        if (!isOccupied) {
+          div.onclick = () => showModal(seatId);
+        } else {
+          div.onclick = () => showCancelModal(seatId);
+        }
 
         if (seatId >= 1 && seatId <= 8) windowBlock.appendChild(div);
         else if (seatId >= 9 && seatId <= 12) wallBlock.appendChild(div);
       });
-}
+    }
 
     function showModal(seatId) {
       document.getElementById("modalContainer").innerHTML = `
@@ -246,10 +242,8 @@
 
     async function submitBooking(seatId) {
       const имя = document.getElementById("userName").value;
-      const отRaw = document.getElementById("fromDate").valueAsDate;
-      const доRaw = document.getElementById("toDate").valueAsDate;
-      const от = отRaw ? new Date(отRaw).toISOString().slice(0, 10) : "";
-      const до = доRaw ? new Date(доRaw).toISOString().slice(0, 10) : "";
+      const от = document.getElementById("fromDate").value;
+      const до = document.getElementById("toDate").value;
       document.getElementById("modalContainer").innerHTML = "";
       if (имя && от && до) {
         try {
