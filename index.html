@@ -181,11 +181,9 @@
         const match = raw.match(/^Стол\s(\d{1,2})$/);
         const seatId = match ? parseInt(match[1]) : NaN;
 
-        const toDate = place["До"]
-          ? new Date(place["До"].replace(/-/g, "/"))
-          : null;
-
-        const expired = toDate && new Date() > toDate;
+        const toDate = place["До"] ? new Date(place["До"].replace(/-/g, "/")) : null;
+        const daysLeft = toDate ? Math.ceil((toDate - now) / (1000 * 60 * 60 * 24)) : null;
+        const expired = toDate && now > toDate;
         const isOccupied = place["Занято"] === "да" && !expired;
 
         const div = document.createElement("div");
@@ -198,7 +196,9 @@
         if (isAdmin) classes += " admin";
         div.className = classes;
 
-        const tooltip = isOccupied ? `Имя: ${place["Имя"] || "Неизвестно"}\n${place["От"]?.split("T")[0] || ""} – ${place["До"]?.split("T")[0] || ""}` : "Свободно";
+        const tooltip = isOccupied
+          ? `Имя: ${place["Имя"] || "Неизвестно"}\n${place["От"]?.split("T")[0] || ""} – ${place["До"]?.split("T")[0] || ""}`
+          : "Свободно";
         div.setAttribute("data-tooltip", tooltip);
 
         if (isAdmin) {
@@ -216,16 +216,19 @@
           ${isOccupied ? `<div><small>${place["Имя"] || "!!неизвестно!!"}</small></div>
           <div><small>${place["От"]?.split("T")[0] || ""} – ${place["До"]?.split("T")[0] || ""}</small></div>` : ""}
         `;
-        if (!isOccupied) {
-          div.onclick = () => showModal(seatId);
-        } else {
-          div.onclick = () => showCancelModal(seatId);
-        }
+
+        div.onclick = () => {
+          if (isOccupied) {
+            showCancelModal(seatId);
+          } else {
+            showModal(seatId);
+          }
+        };
 
         if (seatId >= 1 && seatId <= 8) windowBlock.appendChild(div);
         else if (seatId >= 9 && seatId <= 12) wallBlock.appendChild(div);
       });
-    }
+}
 
     function showModal(seatId) {
       document.getElementById("modalContainer").innerHTML = `
